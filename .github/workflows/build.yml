@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Show repo structure
+      - name: Show repo structure (debug)
         run: ls -R
 
       - name: Set up JDK 17
@@ -22,30 +22,13 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Find gradlew
-        id: find_gradlew
-        run: |
-          echo "Searching for gradlew..."
-          GRAD=$(find . -name gradlew -type f | head -n 1 || true)
-          echo "found_gradlew=$GRAD" >> $GITHUB_OUTPUT
-
-      - name: Build with gradlew if present
-        if: steps.find_gradlew.outputs.found_gradlew != ''
-        run: |
-          chmod +x "${{ steps.find_gradlew.outputs.found_gradlew }}"
-          DIR=$(dirname "${{ steps.find_gradlew.outputs.found_gradlew }}")
-          echo "Running wrapper in $DIR"
-          pushd "$DIR"
-          ./gradlew :app:assembleDebug
-          popd
-
-      - name: Or build with Gradle action if no gradlew
-        if: steps.find_gradlew.outputs.found_gradlew == ''
+      - name: Build with Gradle action (no gradlew required)
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: ":app:assembleDebug"
+          gradle-version: '8.0.2'
+          arguments: ':app:assembleDebug'
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
